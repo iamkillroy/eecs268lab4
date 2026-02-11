@@ -5,9 +5,7 @@
 #       (KU//
 #        "
 # Rock Chalk!
-from inspect import Attribute
-from platform import node
-from sqlite3.dbapi2 import DataError
+
 from typing import Union #type declaration
 class Node:
     """Node Class that stores entry and reference to self
@@ -28,7 +26,7 @@ class LinkedList:
         self.linkedListLength = 0
     def insert(self, index: int, entry) -> None:
         """Inserts the index at either 0 (front) or length inclusively"""
-        print("insert " + entry)
+        print("insert " + str(entry))
         if self.head == None:
             self.head = Node(entry)
             self.linkedListLength += 1
@@ -49,7 +47,8 @@ class LinkedList:
         self.linkedListLength += 1
     def length(self) -> int:
         """Fuction that recursively goes through every single element, but also doesn't
-        necessarily need to go through every value because we're just counting"""
+        necessarily need to go through every value because we're just counting and is an overengineered
+        solution because I don't trust the methods and I'd rather be dead certain of the length"""
         if self.head == None: return 0 #quick zero node check
         currentNode = self.head #set the current entry to the head
         lengthCounter = 1
@@ -66,16 +65,30 @@ class LinkedList:
             self.insert(self.length(), entry) #no offset needed on the length, it's the last nth indexable + 1 so next
     def display(self) -> str:
         """Displays the entire node in a human readable output way"""
-        if self.head == None: raise DataError("No Nodes in this list")
-        nodeElementString: str = "START |"
-        nodeValueString: str =   "VALUE |"
+        #converting from writing rust all break kinda made me like type
+        # declarations that are explicit like this. it might be just a phase mom :(
+        if self.head == None: raise RuntimeError("No Nodes in this list")
+        nodeElementString: str = "START | "
+        nodeValueString: str =   "VALUE | "
         currentNode: Node = self.head #start
         charDisplayList: tuple = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "Y", "X", "Z")
         charDisplayPoint: int = 0
         while hasattr(currentNode, "next"):
-            nodeValueString
-            nodeElementString = nodeElementString + charDisplayList[charDisplayPoint]
-
+            #first let's see if the entry can actually be displayed
+            # for real for real by python's inbuilt str()
+            try:
+                valueOfNodeEntry = str(currentNode.entry)
+            except TypeError:
+                #that's okay let's just say the type as a string
+                valueOfNodeEntry = str(type(currentNode.entry))
+            nodeValueString = nodeValueString + valueOfNodeEntry + " " #set value and offset
+            distanceBetweenValue = (len(valueOfNodeEntry)//2 ) * " " #evil little offset
+            nodeElementString = nodeElementString + distanceBetweenValue + charDisplayList[charDisplayPoint%25] + " " #to display A B etc
+            currentNode = currentNode.next
+            charDisplayPoint += 1
+        print(nodeElementString)
+        print(nodeValueString)
+        return nodeElementString + "\n" + nodeValueString
     def get_entry(self, index: int) -> Node:
         """Gets entry with negative indexing"""
         if self.head == None: raise IndexError("List is empty")#quick zero node check
@@ -88,16 +101,29 @@ class LinkedList:
         else: #negative addressing
             finalValue: int = (self.length() - 2) - index #-1 is for the list len versus index offset
         try:
-            while j != abs(finalValue):
-                    print("j is" + str(j))
-                    print("finalvalue" + str(finalValue))
-                    currentNode = currentNode.next
+            while j != abs(finalValue): #while we're not there
+                    currentNode = currentNode.next #increment
                     j += 1
-            return currentNode.entry
+            return currentNode.entry #return entry
         except TypeError:
             raise IndexError("The index can't be found in the list")
+    def clear(self) -> None:
+        """Clears the list"""
+        self.head = None #just clear it, thanks garbage collection in python!!!
+        return None
+    def remove(self, index) -> None:
+        if self.head == None: raise IndexError(f"Can't delete from non-existant index {index}")
+        try:
+            j = 0
+            currentNode: Node = self.head
+            previousNode: Node = None
+            while j != index:
+                previousNode = currentNode
+                currentNode = currentNode.next
 
-ll = LinkedList()
-print(ll.length())
-
-print(ll.length())
+                j += 1
+            #okay now that we've found it, we need to set the previous node's value to the currentNode.next
+            previousNode.next = currentNode.next
+            self.linkedListLength -= 1
+        except:
+            raise IndexError(f"Can't delete from non-existant index {index}")
